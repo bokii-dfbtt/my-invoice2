@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="UTF-8">
+<title>វិក្កយបត្រ / Invoice Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1f2a24;
+    --paper:#ffffff;
+    --line:#2f3b34;
+    --accent:#1f7a3d;
+    --accent-soft:#e8f5ec;
+    --muted:#6b756f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Kantumruy Pro', sans-serif;
+    background:#eef1ee;
+    margin:0;
+    padding:24px;
+    color:var(--ink);
+  }
+  .toolbar{
+    max-width:720px;
+    margin:0 auto 16px auto;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  button{
+    font-family:inherit;
+    font-size:15px;
+    padding:10px 18px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-secondary{background:#fff;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-danger{background:#fff;color:#b3402c;border:1.5px solid #b3402c;}
+
+  .sheet{
+    max-width:720px;
+    margin:0 auto;
+    background:var(--paper);
+    border:2px solid var(--line);
+    border-radius:10px;
+    padding:36px 40px;
+  }
+  .header{
+    text-align:center;
+    margin-bottom:6px;
+  }
+  .logo-wrap{
+    width:88px;height:88px;
+    border-radius:50%;
+    border:2px dashed #b7c2ba;
+    margin:0 auto 10px auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    background:var(--accent-soft);
+    cursor:pointer;
+  }
+  .logo-wrap img{width:100%;height:100%;object-fit:cover;}
+  .logo-wrap span{font-size:11px;color:var(--muted);text-align:center;padding:4px;}
+  .logo-input{display:none;}
+
+  input.company-name{
+    font-size:26px;
+    font-weight:700;
+    text-align:center;
+    border:none;
+    background:transparent;
+    width:100%;
+    color:var(--ink);
+    outline:none;
+  }
+  .invoice-title{
+    text-align:center;
+    font-weight:700;
+    font-size:18px;
+    letter-spacing:1px;
+    border-bottom:2px solid var(--line);
+    display:inline-block;
+    padding-bottom:3px;
+    margin:6px auto 12px auto;
+  }
+  .invoice-title-wrap{text-align:center;}
+
+  .company-sub{
+    text-align:center;
+    font-size:14px;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+  .company-sub input{
+    border:none;
+    background:transparent;
+    text-align:center;
+    font-size:14px;
+    color:var(--muted);
+    font-family:inherit;
+    outline:none;
+  }
+
+  .meta{
+    display:flex;
+    justify-content:space-between;
+    margin:22px 0 14px 0;
+    font-size:14.5px;
+    gap:20px;
+  }
+  .meta .col{flex:1;}
+  .meta .row{margin-bottom:6px;display:flex;gap:6px;align-items:baseline;}
+  .meta label{color:var(--muted);white-space:nowrap;}
+  .meta input{
+    border:none;
+    border-bottom:1px solid #cfd6d1;
+    font-family:inherit;
+    font-size:14.5px;
+    padding:2px 4px;
+    width:100%;
+    outline:none;
+    background:transparent;
+  }
+  .meta .right{text-align:right;}
+  .meta .right .row{justify-content:flex-end;}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+    font-size:14.5px;
+  }
+  th,td{
+    border:1.4px solid var(--line);
+    padding:8px 6px;
+    text-align:center;
+  }
+  th{background:var(--accent-soft);font-weight:700;}
+  td.item-name{text-align:left;}
+  td input{
+    border:none;
+    background:transparent;
+    width:100%;
+    text-align:center;
+    font-family:inherit;
+    font-size:14.5px;
+    outline:none;
+  }
+  td.item-name input{text-align:left;}
+  .amount-cell{white-space:nowrap;}
+  .del-row{
+    background:none;border:none;color:#b3402c;font-size:16px;cursor:pointer;padding:0 4px;
+  }
+  .total-row td{font-weight:700;background:#fafbfa;}
+  .total-row td:first-child{text-align:left;}
+
+  .add-row-wrap{margin-top:8px;text-align:center;}
+
+  .foot-note{
+    margin-top:26px;
+    text-align:center;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+
+  @media print{
+    body{background:#fff;padding:0;}
+    .toolbar,.del-row,.add-row-wrap{display:none !important;}
+    .sheet{border:none;box-shadow:none;}
+    input{border:none !important;}
+    .logo-wrap{border-style:solid;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button class="btn-secondary" id="addRowBtn">+ បន្ថែមទំនិញ</button>
+  <button class="btn-primary" id="printBtn">🖨️ បោះពុម្ព / រក្សាទុកជា PDF</button>
+</div>
+
+<div class="sheet" id="sheet">
+
+  <div class="header">
+    <div class="logo-wrap" id="logoWrap">
+      <span id="logoPlaceholder">ដាក់<br>រូបសញ្ញា</span>
+      <img id="logoImg" style="display:none;">
+    </div>
+    <input type="file" id="logoInput" class="logo-input" accept="image/*">
+    <input class="company-name" id="companyName" value="ឈ្មោះក្រុមហ៊ុនរបស់អ្នក">
+    <div class="invoice-title-wrap">
+      <div class="invoice-title">វិក្កយបត្រ / INVOICE</div>
+    </div>
+    <div class="company-sub">
+      <input id="companyAddr" value="ខេត្ត / ក្រុង, ប្រទេសកម្ពុជា">
+    </div>
+    <div class="company-sub">
+      លេខទូរស័ព្ទ: <input id="companyPhone" style="width:150px;display:inline-block;" value="0XX XXX XXX">
+    </div>
+  </div>
+
+  <div class="meta">
+    <div class="col">
+      <div class="row"><label>អតិថិជនៈ</label><input id="custName" value="Sok Chea"></div>
+      <div class="row"><label>លេខទូរស័ព្ទៈ</label><input id="custPhone" value="0XX XXX XXX"></div>
+      <div class="row"><label>អាស័យដ្ឋានៈ</label><input id="custAddr" value="..."></div>
+    </div>
+    <div class="col right">
+      <div class="row"><label>វិក្កយបត្រ #</label><input id="invNo" value="001"></div>
+      <div class="row"><label>កាលបរិច្ឆេទៈ</label><input id="invDate" value="01-Aug-2026"></div>
+    </div>
+  </div>
+
+  <table id="itemTable">
+    <thead>
+      <tr>
+        <th style="width:6%;">ល.រ<br>No</th>
+        <th style="width:34%;">ឈ្មោះទំនិញ<br>Item</th>
+        <th style="width:12%;">ចំនួន<br>Qty</th>
+        <th style="width:20%;">តម្លៃ<br>Price</th>
+        <th style="width:20%;">សរុប<br>Amount</th>
+        <th style="width:8%;"></th>
+      </tr>
+    </thead>
+    <tbody id="itemBody">
+    </tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td colspan="4">សរុប / Total Price</td>
+        <td id="grandTotal" class="amount-cell">៛0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="foot-note">សូមអរគុណសម្រាប់ការជាវប្រើប្រាស់!</div>
+</div>
+
+<script>
+let rowCount = 0;
+
+function fmt(n){
+  n = Math.round(n || 0);
+  return '៛' + n.toLocaleString('en-US');
+}
+
+function addRow(name, qty, price){
+  rowCount++;
+  const tbody = document.getElementById('itemBody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="rownum">${rowCount}</td>
+    <td class="item-name"><input type="text" class="f-name" value="${name||''}" placeholder="ឈ្មោះទំនិញ"></td>
+    <td><input type="number" class="f-qty" value="${qty!==undefined?qty:1}" min="0"></td>
+    <td><input type="number" class="f-price" value="${price!==undefined?price:0}" min="0"></td>
+    <td class="amount-cell f-amount">៛0</td>
+    <td><button class="del-row" title="លុប">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+
+  tr.querySelector('.f-qty').addEventListener('input', recalc);
+  tr.querySelector('.f-price').addEventListener('input', recalc);
+  tr.querySelector('.del-row').addEventListener('click', ()=>{ tr.remove(); renumber(); recalc(); });
+
+  recalc();
+}
+
+function renumber(){
+  document.querySelectorAll('#itemBody tr').forEach((tr, i)=>{
+    tr.querySelector('.rownum').textContent = i+1;
+  });
+}
+
+function recalc(){
+  let grand = 0;
+  document.querySelectorAll('#itemBody tr').forEach(tr=>{
+    const qty = parseFloat(tr.querySelector('.f-qty').value) || 0;
+    const price = parseFloat(tr.querySelector('.f-price').value) || 0;
+    const amount = qty * price;
+    tr.querySelector('.f-amount').textContent = fmt(amount);
+    grand += amount;
+  });
+  document.getElementById('grandTotal').textContent = fmt(grand);
+}
+
+document.getElementById('addRowBtn').addEventListener('click', ()=> addRow('', 1, 0));
+document.getElementById('printBtn').addEventListener('click', ()=> window.print());
+
+// logo upload
+document.getElementById('logoWrap').addEventListener('click', ()=> document.getElementById('logoInput').click());
+document.getElementById('logoInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    document.getElementById('logoImg').src = ev.target.result;
+    document.getElementById('logoImg').style.display = 'block';
+    document.getElementById('logoPlaceholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+// initial sample rows
+addRow('ក្រូចថ្នូង', 20, 8000);
+addRow('ក្រូចផ្លាខ្មែរ', 60, 6500);
+addRow('ក្រូចពោធិសាត់', 20, 6500);
+</script>
+
+</body>
+</html>
